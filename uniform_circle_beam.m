@@ -1,10 +1,16 @@
-pic_prime = imread("OAM+1_all0_normalized.bmp");
+%pic_prime = imread("OAM+1_all0_normalized.bmp");
+pic_prime = imread("first_picture.bmp");
 imshow(pic_prime)
 
-diameter = 416;
+diameter = 430;
 
-[centers,radii] = imfindcircles(pic_prime,[(diameter/2 - 4), diameter/2 + 4],'ObjectPolarity','dark', ...
-    'Sensitivity',0.995);
+gray_image = rgb2gray(pic_prime);
+
+[centers,radii] = imfindcircles(pic_prime,[(diameter/2 - 30), diameter/2 + 30],'ObjectPolarity','bright', ...
+    'Sensitivity',0.995)
+
+%h = viscircles(centers,radii);
+%hold on;
 
 %imshow(pic_prime)
 %h = viscircles(centers,radii);
@@ -79,6 +85,7 @@ real_diff = 0;
 
 list_differences = [];
 list_sections = [];
+list_real_diff = [];
 
 for index_i = 1:1:36
     diff = 0;
@@ -92,6 +99,27 @@ for index_i = 1:1:36
         greatest_diff = diff;
         section = index_i;
         real_diff = diff2;
+    end
+
+    if (size(list_differences) == 0)
+        list_sections(1) = index_i;
+        list_differences(1) = diff;
+        list_real_diff(1) = diff2;
+    else 
+        index = 1;
+        while(list_differences(index) > diff & size(list_differences,2) > index)
+            index = index + 1;
+        end
+
+        if(index == 1)
+            list_differences = [diff list_differences];
+            list_sections = [index_i list_sections];
+            list_real_diff = [diff2 list_real_diff];
+        else
+            list_differences = [list_differences(1:index) diff list_differences(index + 1:end)];
+            list_sections = [list_sections(1:index) index_i list_sections(index + 1:end)];
+            list_real_diff = [list_real_diff(1:index) diff2 list_real_diff(index + 1:end)];
+        end 
     end
 
     % What we need to do is create an algorithm that provides us with a
