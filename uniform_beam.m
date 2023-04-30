@@ -38,8 +38,6 @@ for index_i=1:1:size(pic_prime,1)
     end
 end
 
-difference = zeros(36,1,3);
-
 corner_pix = double(pagetranspose(pic_prime(200, 20, :)));
 
 for index_i = 1:1:36

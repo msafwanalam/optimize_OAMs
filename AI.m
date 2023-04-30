@@ -63,7 +63,16 @@ for index_i=1:1:size(pic_prime,1)
     end
 end
 
-difference = zeros(36,1,3);
+% corner_pix = double(pagetranspose(pic_prime(200, 20, :)));
+% 
+% for index_i = 1:1:36
+% 
+%     for remaining_pixels = 1:1:(max(region_count) - region_count(index_i))
+%         region_average_prime(index_i, :, :) = region_average_prime(index_i, :, :) + corner_pix;
+%     end
+% 
+%     region_average_prime(index_i, :, :) = region_average_prime(index_i, :, :)./max(region_count); 
+% end
 
 for index_i = 1:1:36
     region_average_prime(index_i, :, :) = region_average_prime(index_i, :, :)./region_count(index_i); 
@@ -84,10 +93,15 @@ list_real_diff = [];
 for index_i = 1:1:36
     diff = 0;
     diff2 = 0;
-    for index_j = 1:1:3
-        diff = diff + abs(region_average_prime(index_i, :, index_j) - total_average(index_j));
-        diff2 = diff2 + region_average_prime(index_i, :, index_j) - total_average(index_j);
-    end
+
+    %for index_j = 1:1:3
+    %    diff = diff + abs(region_average_prime(index_i, :, index_j) - total_average(index_j));
+    %    diff2 = diff2 + region_average_prime(index_i, :, index_j) - total_average(index_j);
+    %end
+
+            
+    diff = diff + abs(region_average_prime(index_i, :, 1) - total_average(1));
+    diff2 = diff2 + region_average_prime(index_i, :, 1) - total_average(1);
 
     if diff > greatest_diff
         greatest_diff = diff;
