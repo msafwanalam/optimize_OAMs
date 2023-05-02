@@ -2,10 +2,17 @@
 file = dir("C:\Users\Ford\Documents\Gentec-EO\beamage.bmp");
 old_file_date = file.date;
 count = 0;
+find_circle_count = 0;
+% usually diameter is 410
+diameter =482;
+% use drawline to find diameter of the circle (or find_diameter matlab 
+% script)
+max_iteration = 100;
 
-% Choose theta based on how much the angle will differ 
+% Choose theta based on how much the angle will differ
 % OAM +1 = 0
 % OAM +2 = 10
+% OAM -2 = 100
 theta = 10;
 
 while(true)
@@ -25,11 +32,9 @@ while(true)
         figure(1)
         imshow(pic_prime)
 
-        % usually diameter is 410
-        diameter = 330;
-        % use drawline to find diameter of the circle (or find_diameter
-        % matlab script)
+
         gray_image = rgb2gray(pic_prime);
+        
 
         [centers,radii] = imfindcircles(gray_image,[(diameter/2 - 10), diameter/2 + 10],'ObjectPolarity','bright', ...
             'Sensitivity',0.995)
@@ -41,8 +46,17 @@ while(true)
         end
 
         if(size(radii, 1) < 1)
-            'Could not detect circle, please change diameter'
+            find_circle_count = find_circle_count + 1;
+            if(find_circle_count > 5)
+                'Could not find circle, trying again'
+                writematrix(curr_values,"beam_values.csv")
+                continue;
+            else
+                'Could not detect circle, please change diameter'
+            end
         end
+
+        find_circle_count = 0;
 
         for index_i=1:1:size(pic_prime,1)
             for index_j=1:1:size(pic_prime,2)
@@ -50,7 +64,8 @@ while(true)
                 point = [index_j, index_i];
                 dist = sqrt((point(1) - centers(1))^2 + (point(2) - centers(2))^2);
 
-                if dist <= 3/10*radii || dist >= radii
+                %% INCREASE OR DECREASE INNER CIRCLE HERE
+                if dist <= 4/10*radii || dist >= radii
                     pic_prime(index_i, index_j, :) = [0;0;0];
                     continue;
                 end
@@ -92,9 +107,9 @@ while(true)
 
 
                 P0 = centers;
-                P1 = point;               
+                P1 = point;
                 P2 = [size(pic_prime, 2), size(pic_prime, 1)/2];
-                n1 = (P2 - P0) / norm(P2 - P0); 
+                n1 = (P2 - P0) / norm(P2 - P0);
                 n2 = (P1 - P0) / norm(P1 - P0);
 
                 angle3 = rad2deg(atan2(norm(det([n2; n1])), dot(n1, n2)));
@@ -120,13 +135,17 @@ while(true)
         corner_pix = double(pagetranspose(pic_prime(200, 20, :)));
 
         %% In this code we are averaging out each of the sections that are created
+        %         for index_i = 1:1:36
+        %
+        %             for remaining_pixels = 1:1:(max(region_count) - region_count(index_i))
+        %                 region_average_prime(index_i, :, :) = region_average_prime(index_i, :, :) + corner_pix;
+        %             end
+        %
+        %             region_average_prime(index_i, :, :) = region_average_prime(index_i, :, :)./max(region_count);
+        %         end
+
         for index_i = 1:1:36
-
-            for remaining_pixels = 1:1:(max(region_count) - region_count(index_i))
-                region_average_prime(index_i, :, :) = region_average_prime(index_i, :, :) + corner_pix;
-            end
-
-            region_average_prime(index_i, :, :) = region_average_prime(index_i, :, :)./max(region_count);
+            region_average_prime(index_i, :, :) = region_average_prime(index_i, :, :)./region_count(index_i);
         end
 
         total_average = sum(region_average_prime)/36;
@@ -190,6 +209,10 @@ while(true)
             prediction = list_sections(inferences);
             solved = false;
 
+            %             if(list_real_diff(inferences) < 0)
+            %                 continue;
+            %             end
+
             for iteration=1:1:5
                 if(curr_values(prediction) == 0.05) %If the predicted value is maxed at 0.05
                     if(list_real_diff(inferences) < 0) % If we are decreasing the voltage we are okay
@@ -239,7 +262,9 @@ while(true)
         end
         writematrix(curr_values,"beam_values.csv")
         curr_values
-
-
+        if(count == max_iteration)
+            'We have reached max iterations'
+            break;
+        end
     end
 end
